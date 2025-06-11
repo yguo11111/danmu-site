@@ -1,230 +1,151 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>機機</title>
-  <style>
-    /* 基本樣式 */
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: #f0f0f0;
-      font-family: '微軟正黑體', sans-serif;
-    }
-
-    /* 聊天區域 */
-    #chatContainer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
-      padding: 10px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column-reverse;
-      justify-content: flex-start;
-    }
-
-    /* 訊息樣式 */
-    .message {
-      max-width: 80%;
-      margin: 5px;
-      padding: 10px;
-      border-radius: 15px;
-      background-color: #ffffff;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      position: relative;
-      animation: slideIn 0.5s ease-out;
-    }
-
-    /* 訊息動畫 */
-    @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-      }
-      to {
-        transform: translateX(0);
-      }
-    }
-
-    /* 圓角框 */
-    .message img {
-      border-radius: 10px;
-      max-width: 100%;
-      height: auto;
-    }
-
-    /* 輸入區域 */
-    #inputContainer {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      max-width: 600px;
-      display: flex;
-      align-items: center;
-      background-color: #ffffff;
-      padding: 10px;
-      border-radius: 30px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    #messageInput {
-      flex-grow: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 20px;
-      font-size: 16px;
-      outline: none;
-    }
-
-    #sendButton {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin-left: 10px;
-      border-radius: 20px;
-      cursor: pointer;
-    }
-
-    #sendButton:hover {
-      background-color: #45a049;
-    }
-
-    /* 背景設定區域 */
-    #backgroundContainer {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background-color: rgba(255, 255, 255, 0.8);
-      padding: 10px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-    }
-
-    #backgroundInput {
-      padding: 5px;
-      border: none;
-      border-radius: 5px;
-      font-size: 14px;
-      outline: none;
-    }
-
-    #backgroundButton {
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-left: 5px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    #backgroundButton:hover {
-      background-color: #0b7dda;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>彈幕網站</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; overflow: hidden; height: 100vh; background: black;
+    animation: bgcolor 10s linear infinite;
+  }
+  @keyframes bgcolor {
+    0% {background-color: rgb(255,0,0);}
+    33% {background-color: rgb(0,255,0);}
+    66% {background-color: rgb(0,0,255);}
+    100% {background-color: rgb(255,0,0);}
+  }
+  #centerText {
+    position: absolute; top: 50%; left: 50%;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) rotate(0deg);
+    font-size: 48px; font-weight: bold; color: white;
+    animation: spin 4s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  #danmuContainer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .danmu {
+    position: absolute; white-space: nowrap;
+    font-size: 32px; color: white; font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+    user-select: none;
+  }
+  #inputContainer {
+    position: fixed; bottom: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 600px;
+    display: flex;
+  }
+  #danmuInput {
+    flex-grow: 1;
+    font-size: 20px;
+    padding: 10px;
+    border-radius: 4px 0 0 4px;
+    border: none;
+  }
+  #sendBtn {
+    font-size: 20px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+  }
+  #sendBtn:hover {
+    background-color: #218838;
+  }
+</style>
 </head>
 <body>
 
-  <!-- 背景設定區域 -->
-  <div id="backgroundContainer">
-    <input type="text" id="backgroundInput" placeholder="輸入背景圖片 URL">
-    <button id="backgroundButton">設定背景</button>
-  </div>
+<div id="centerText">郭志與愛暖暖</div>
+<div id="danmuContainer"></div>
 
-  <!-- 聊天區域 -->
-  <div id="chatContainer"></div>
+<div id="inputContainer">
+  <input id="danmuInput" type="text" placeholder="輸入彈幕" maxlength="50" />
+  <button id="sendBtn">送出</button>
+</div>
 
-  <!-- 輸入區域 -->
-  <div id="inputContainer">
-    <input type="text" id="messageInput" placeholder="輸入訊息..." maxlength="200">
-    <button id="sendButton">送出</button>
-  </div>
+<script>
+  const ws = new WebSocket("wss://rambunctious-purple-argument.glitch.me");
 
-  <script>
-    const ws = new WebSocket("wss://your-websocket-server-url");
+  const danmuContainer = document.getElementById("danmuContainer");
+  const input = document.getElementById("danmuInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const centerText = document.getElementById("centerText");
 
-    const chatContainer = document.getElementById("chatContainer");
-    const messageInput = document.getElementById("messageInput");
-    const sendButton = document.getElementById("sendButton");
-    const backgroundInput = document.getElementById("backgroundInput");
-    const backgroundButton = document.getElementById("backgroundButton");
+  // 送出彈幕
+  function sendDanmu() {
+    const text = input.value.trim();
+    if (!text) return;
+    ws.send(text);
+    input.value = "";
+  }
 
-    // 發送訊息
-    function sendMessage() {
-      const message = messageInput.value.trim();
-      if (message) {
-        const data = {
-          type: "chat",
-          message: message,
-          timestamp: new Date().toISOString()
-        };
-        ws.send(JSON.stringify(data));
-        messageInput.value = "";
+  sendBtn.addEventListener("click", sendDanmu);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendDanmu();
+  });
+
+  // 顯示彈幕
+  function createDanmu(text) {
+    const danmu = document.createElement("div");
+    danmu.classList.add("danmu");
+    danmu.textContent = text;
+
+    // 隨機垂直位置
+    const maxHeight = window.innerHeight - 40;
+    danmu.style.top = Math.random() * maxHeight + "px";
+
+    // 初始位置在左邊外側
+    danmu.style.left = "-200px";
+    danmuContainer.appendChild(danmu);
+
+    // 動畫往右移動
+    const totalDistance = window.innerWidth + 400;
+    let start = null;
+    function step(timestamp) {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      // 移動速度 150 px/s
+      const speed = 150;
+      const x = -200 + (elapsed / 1000) * speed;
+      if (x < totalDistance) {
+        danmu.style.left = x + "px";
+        requestAnimationFrame(step);
+      } else {
+        danmu.remove();
       }
     }
+    requestAnimationFrame(step);
+  }
 
-    // 顯示訊息
-    function displayMessage(data) {
-      const messageElement = document.createElement("div");
-      messageElement.classList.add("message");
-      messageElement.innerHTML = `<strong>使用者：</strong>${data.message}`;
-      chatContainer.appendChild(messageElement);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+  // WebSocket 收到訊息就新增彈幕
+  ws.onmessage = (event) => {
+    createDanmu(event.data);
+  };
 
-    // 設定背景圖片
-    function setBackground() {
-      const backgroundUrl = backgroundInput.value.trim();
-      if (backgroundUrl) {
-        document.body.style.backgroundImage = `url(${backgroundUrl})`;
-        const data = {
-          type: "background",
-          imageUrl: backgroundUrl
-        };
-        ws.send(JSON.stringify(data));
-        backgroundInput.value = "";
-      }
-    }
+  ws.onopen = () => {
+    console.log("連上 WebSocket 伺服器");
+  };
 
-    // 處理 WebSocket 訊息
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "chat") {
-        displayMessage(data);
-      } else if (data.type === "background") {
-        document.body.style.backgroundImage = `url(${data.imageUrl})`;
-      }
-    };
+  ws.onerror = (err) => {
+    console.error("WebSocket 發生錯誤", err);
+  };
 
-    // 送出訊息
-    sendButton.addEventListener("click", sendMessage);
+  // 旋轉速度改快
+  centerText.style.animationDuration = "2s";
 
-    // 按 Enter 鍵送出訊息
-    messageInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        sendMessage();
-      }
-    });
-
-    // 設定背景
-    backgroundButton.addEventListener("click", setBackground);
-
-    // 按 Enter 鍵設定背景
-    backgroundInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        setBackground();
-      }
-    });
-  </script>
+</script>
 
 </body>
 </html>
