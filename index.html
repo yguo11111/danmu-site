@@ -1,73 +1,102 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>彈幕網站</title>
-<style>
-  body, html {
-    margin: 0; padding: 0; overflow: hidden; height: 100vh; background: black;
-    animation: bgcolor 10s linear infinite;
-  }
-  @keyframes bgcolor {
-    0% {background-color: rgb(255,0,0);}
-    33% {background-color: rgb(0,255,0);}
-    66% {background-color: rgb(0,0,255);}
-    100% {background-color: rgb(255,0,0);}
-  }
-  #centerText {
-    position: absolute; top: 50%; left: 50%;
-    transform-origin: center center;
-    transform: translate(-50%, -50%) rotate(0deg);
-    font-size: 48px; font-weight: bold; color: white;
-    animation: spin 4s linear infinite;
-  }
-  @keyframes spin {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to { transform: translate(-50%, -50%) rotate(360deg); }
-  }
-  #danmuContainer {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .danmu {
-    position: absolute; white-space: nowrap;
-    font-size: 32px; color: white; font-weight: bold;
-    text-shadow: 1px 1px 2px black;
-    user-select: none;
-  }
-  #inputContainer {
-    position: fixed; bottom: 10px; left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    max-width: 600px;
-    display: flex;
-  }
-  #danmuInput {
-    flex-grow: 1;
-    font-size: 20px;
-    padding: 10px;
-    border-radius: 4px 0 0 4px;
-    border: none;
-  }
-  #sendBtn {
-    font-size: 20px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 0 4px 4px 0;
-    background-color: #28a745;
-    color: white;
-    cursor: pointer;
-  }
-  #sendBtn:hover {
-    background-color: #218838;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>彈幕聊天室</title>
+  <style>
+    /* 基本樣式 */
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100vh;
+      background: black;
+      font-family: "Comic Sans MS", sans-serif;
+    }
+    #danmuContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .danmu {
+      position: absolute;
+      white-space: nowrap;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px black;
+      user-select: none;
+      border-radius: 12px;
+      padding: 2px 10px;
+      margin: 5px;
+      opacity: 0;
+      animation: fadeIn 1s forwards, moveLeft 10s linear infinite;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes moveLeft {
+      0% { left: 100%; }
+      100% { left: -100%; }
+    }
+    /* 輸入框樣式 */
+    #inputContainer {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 600px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 30px;
+      padding: 10px;
+    }
+    #danmuInput {
+      flex-grow: 1;
+      font-size: 18px;
+      padding: 10px;
+      border: none;
+      border-radius: 20px;
+    }
+    #sendBtn {
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    #sendBtn:hover {
+      background-color: #218838;
+    }
+    /* 排行榜樣式 */
+    #leaderboard {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      max-height: 90%;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    #leaderboard h3 {
+      margin-top: 0;
+    }
+  </style>
 </head>
 <body>
 
-<div id="centerText">郭志與愛暖暖</div>
 <div id="danmuContainer"></div>
 
 <div id="inputContainer">
@@ -75,19 +104,35 @@
   <button id="sendBtn">送出</button>
 </div>
 
+<div id="leaderboard">
+  <h3>排行榜</h3>
+  <ul id="rankList"></ul>
+</div>
+
 <script>
   const ws = new WebSocket("wss://rambunctious-purple-argument.glitch.me");
-
   const danmuContainer = document.getElementById("danmuContainer");
   const input = document.getElementById("danmuInput");
   const sendBtn = document.getElementById("sendBtn");
-  const centerText = document.getElementById("centerText");
+  const leaderboard = document.getElementById("leaderboard");
+  const rankList = document.getElementById("rankList");
+
+  let userRank = {};
 
   // 送出彈幕
   function sendDanmu() {
     const text = input.value.trim();
     if (!text) return;
-    ws.send(text);
+
+    const danmuData = {
+      type: "message",
+      content: text,
+      size: Math.floor(Math.random() * 20) + 20, // 隨機字體大小
+      color: getRandomColor(),
+      speed: Math.floor(Math.random() * 3) + 7, // 隨機速度
+    };
+
+    ws.send(JSON.stringify(danmuData));
     input.value = "";
   }
 
@@ -97,41 +142,47 @@
   });
 
   // 顯示彈幕
-  function createDanmu(text) {
+  function createDanmu(data) {
     const danmu = document.createElement("div");
     danmu.classList.add("danmu");
-    danmu.textContent = text;
+    danmu.textContent = data.content;
+    danmu.style.fontSize = `${data.size}px`;
+    danmu.style.color = data.color;
+    danmu.style.animationDuration = `${data.speed}s`;
 
     // 隨機垂直位置
     const maxHeight = window.innerHeight - 40;
-    danmu.style.top = Math.random() * maxHeight + "px";
+    danmu.style.top = `${Math.random() * maxHeight}px`;
 
-    // 初始位置在左邊外側
-    danmu.style.left = "-200px";
     danmuContainer.appendChild(danmu);
 
-    // 動畫往右移動
-    const totalDistance = window.innerWidth + 400;
-    let start = null;
-    function step(timestamp) {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      // 移動速度 150 px/s
-      const speed = 150;
-      const x = -200 + (elapsed / 1000) * speed;
-      if (x < totalDistance) {
-        danmu.style.left = x + "px";
-        requestAnimationFrame(step);
-      } else {
-        danmu.remove();
-      }
-    }
-    requestAnimationFrame(step);
+    // 移除彈幕
+    setTimeout(() => {
+      danmu.remove();
+    }, data.speed * 1000);
   }
 
-  // WebSocket 收到訊息就新增彈幕
+  // 更新排行榜
+  function updateLeaderboard() {
+    rankList.innerHTML = "";
+    Object.entries(userRank)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([user, count]) => {
+        const li = document.createElement("li");
+        li.textContent = `${user}: ${count}`;
+        rankList.appendChild(li);
+      });
+  }
+
+  // WebSocket 收到訊息
   ws.onmessage = (event) => {
-    createDanmu(event.data);
+    const data = JSON.parse(event.data);
+    if (data.type === "message") {
+      createDanmu(data);
+    } else if (data.type === "leaderboard") {
+      userRank = data.rank;
+      updateLeaderboard();
+    }
   };
 
   ws.onopen = () => {
@@ -142,9 +193,15 @@
     console.error("WebSocket 發生錯誤", err);
   };
 
-  // 旋轉速度改快
-  centerText.style.animationDuration = "2s";
-
+  // 隨機顏色生成
+  function getRandomColor() {
+    const letters = "0123456789ABCDEF";
+    let color = "#";
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
 </script>
 
 </body>
